@@ -10,11 +10,11 @@ namespace NCAA_FB_Data
     {
         static void Main(string[] args)
         {
-            getGameAndSpreadData();
+            getGameAndOddsData();
             
         }
 
-        public static void getGameAndSpreadData()
+        public static void getGameAndOddsData()
         {
             ChromeDriver driver = new ChromeDriver("C:\\Users\\Chris\\Documents\\");
 
@@ -68,6 +68,41 @@ namespace NCAA_FB_Data
                 game.gameWeek = week;
                 games.Add(game);
             }
+
+            int oddRowCount = driver.FindElementsByXPath("//tr[@class='oddrow']").Count;
+            int evenRowCount = driver.FindElementsByXPath("//tr[@class='evenrow']").Count;
+            ReadOnlyCollection<IWebElement> oddsElementsOdd = driver.FindElementsByClassName("oddrow") ;
+            ReadOnlyCollection<IWebElement> oddsElementsEven = driver.FindElementsByClassName("evenrow");
+
+            List<BettingInfo> bettingInfo = new List<BettingInfo>();
+
+            for(int i = 1; i <= oddRowCount; i++)
+            {
+                BettingInfo bi = new BettingInfo();
+                IWebElement spreads = driver.FindElementByXPath($"//tr[@class='oddrow']//child::td[2]//child::td[{i}]");
+
+                //el.FindElement(By.XPath("//child::td[2]//child::td"));
+                //bi.sportsbook = bettingInfoEl.Text;
+                string spreadStr = spreads.Text;
+                string awaySpread = spreadStr.Substring(0, spreadStr.IndexOf("\r"));
+                string homeSpread = spreadStr.Substring(spreadStr.IndexOf("\n") + 1);
+
+                bi.awayTeamSpread = Decimal.Parse(awaySpread);
+                bi.homeTeamSpread = Decimal.Parse(homeSpread);
+
+                bettingInfo.Add(bi);
+            }
+
+            foreach (IWebElement el in oddsElementsEven)
+            {
+                BettingInfo bi = new BettingInfo();
+                IWebElement bettingInfoEl = el.FindElement(By.TagName("td"));
+                IWebElement spreads = el.FindElement(By.XPath("//child::td[2]//child::td"));
+                bi.sportsbook = bettingInfoEl.Text;
+                string test = spreads.Text;
+                bettingInfo.Add(bi);
+            }
+
             driver.Close();
             driver.Dispose();
         }
